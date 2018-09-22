@@ -1,29 +1,25 @@
+# TODO:
+# - install py stuff
 Summary:	Powerful administration and development platform for the PostgreSQL
 Summary(pl.UTF-8):	Potężna platforma do administrowania i programowania bazy PostgreSQL
-Name:		pgadmin3
-Version:	1.22.2
-Release:	1.1
-Epoch:		0
+Name:		pgadmin4
+Version:	3.3
+Release:	0.1
 License:	Artistic
 Group:		Applications/Databases
-Source0:	http://ftp.postgresql.org/pub/pgadmin3/release/v%{version}/src/%{name}-%{version}.tar.gz
-# Source0-md5:	cc5ad37470e36b3353ab925a8e82eb35
+Source0:	http://ftp.postgresql.org/pub/pgadmin/pgadmin4/v%{version}/source/%{name}-%{version}.tar.gz
+# Source0-md5:	6dfd363dd2cf21efe35330c6e4a87f03
 Source1:	%{name}.desktop
-Patch0:		%{name}-m4.patch
-Patch1:		%{name}-LTS.patch
 URL:		http://pgadmin3.org/
-BuildRequires:	autoconf
-BuildRequires:	automake
-BuildRequires:	libxml2-devel >= 2.6.18
-BuildRequires:	libxslt-devel >= 1.1
-BuildRequires:	openssl-devel
+BuildRequires:	python3-devel
 BuildRequires:	postgresql-backend-devel >= 8.3.0
 BuildRequires:	postgresql-devel >= 8.3.0
-BuildRequires:	wxGTK2-unicode-gl-devel >= 2.8.0
-BuildRequires:	wxWidgets-utils >= 2.8.0
+BuildRequires:	qt5-qmake
+BuildRequires: Qt5Core-devel
+BuildRequires: Qt5Gui-devel
+BuildRequires: Qt5Network-devel
+BuildRequires: Qt5Widgets-devel
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
-
-%define		_pgmoduledir		%{_libdir}/postgresql
 
 %description
 pgAdmin III is designed to answer the needs of all users, from writing
@@ -46,38 +42,34 @@ komunikowania z serwerem baz danych.
 
 %prep
 %setup -q
-%patch0 -p1
-%patch1 -p1
 
 %build
-rm -f config/*
-./bootstrap
-%{__aclocal}
-%{__autoconf}
-cp -f config.rpath.in config/config.rpath
-%{__automake}
-%configure \
-	--with-wx-config="%{_bindir}/wx-gtk2-unicode-config" \
-	--with-wx-version="3.0"
+cd runtime
+
+PYTHON_CONFIG=%{_bindir}/python3-config \
+qmake-qt5
 %{__make}
 
 %install
 rm -rf $RPM_BUILD_ROOT
-install -d \
-	$RPM_BUILD_ROOT{%{_desktopdir},%{_pixmapsdir},%{_pgmoduledir}}
 
-%{__make} install \
+install -d \
+	$RPM_BUILD_ROOT{%{_bindir},%{_desktopdir},%{_pixmapsdir}}
+
+%{__make} -C runtime install \
 	DESTDIR=$RPM_BUILD_ROOT
+
+install runtime/pgAdmin4 $RPM_BUILD_ROOT%{_bindir}/pgadmin4
+
 cp -p %{SOURCE1} $RPM_BUILD_ROOT%{_desktopdir}
-cp -p pkg/debian/pgadmin3.xpm $RPM_BUILD_ROOT%{_pixmapsdir}/pgadmin3.xpm
+cp -p runtime/pgAdmin4.png $RPM_BUILD_ROOT%{_pixmapsdir}/pgadmin4.png
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(644,root,root,755)
-%doc LICENSE README
-%attr(755,root,root) %{_bindir}/*
-%{_datadir}/%{name}
-%{_desktopdir}/pgadmin3.desktop
-%{_pixmapsdir}/pgadmin3.xpm
+%doc LICENSE README docs/en_US
+%attr(755,root,root) %{_bindir}/pgadmin4
+%{_desktopdir}/pgadmin4.desktop
+%{_pixmapsdir}/pgadmin4.png
